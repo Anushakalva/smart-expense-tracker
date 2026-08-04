@@ -3,7 +3,9 @@ const cors = require("cors");
 require("dotenv").config();
 
 const connectDB = require("./config/db");
+
 const authRoutes = require("./routes/authRoutes");
+const expenseRoutes = require("./routes/expenseRoutes");
 
 const app = express();
 
@@ -16,14 +18,16 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/expenses", expenseRoutes);
 
 // Test route
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     message: "SmartSpend API is running",
   });
 });
 
+// Server port
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
