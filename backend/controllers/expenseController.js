@@ -1,6 +1,8 @@
 const Expense = require("../models/Expense");
 
-// Create a new expense
+// ===============================
+// Create Expense
+// ===============================
 const createExpense = async (req, res) => {
   try {
     const {
@@ -11,14 +13,12 @@ const createExpense = async (req, res) => {
       paymentMethod,
     } = req.body;
 
-    // Validate required fields
     if (!amount || !category) {
       return res.status(400).json({
         message: "Amount and category are required",
       });
     }
 
-    // Create expense for logged-in user
     const expense = await Expense.create({
       user: req.userId,
       amount,
@@ -41,12 +41,18 @@ const createExpense = async (req, res) => {
   }
 };
 
-// Get all expenses for the logged-in user
+// ===============================
+// Get All Expenses
+// ===============================
 const getExpenses = async (req, res) => {
   try {
+    console.log("Logged in user:", req.userId);
+
     const expenses = await Expense.find({
       user: req.userId,
     }).sort({ date: -1 });
+
+    console.log("Expenses found:", expenses);
 
     res.status(200).json({
       message: "Expenses retrieved successfully",
@@ -62,7 +68,9 @@ const getExpenses = async (req, res) => {
   }
 };
 
-// Get a single expense
+// ===============================
+// Get Single Expense
+// ===============================
 const getExpenseById = async (req, res) => {
   try {
     const expense = await Expense.findOne({
@@ -88,7 +96,9 @@ const getExpenseById = async (req, res) => {
   }
 };
 
-// Update an expense
+// ===============================
+// Update Expense
+// ===============================
 const updateExpense = async (req, res) => {
   try {
     const {
@@ -99,7 +109,6 @@ const updateExpense = async (req, res) => {
       paymentMethod,
     } = req.body;
 
-    // Find expense belonging to logged-in user
     const expense = await Expense.findOne({
       _id: req.params.id,
       user: req.userId,
@@ -111,26 +120,12 @@ const updateExpense = async (req, res) => {
       });
     }
 
-    // Update only provided fields
-    if (amount !== undefined) {
-      expense.amount = amount;
-    }
-
-    if (category !== undefined) {
-      expense.category = category;
-    }
-
-    if (description !== undefined) {
-      expense.description = description;
-    }
-
-    if (date !== undefined) {
-      expense.date = date;
-    }
-
-    if (paymentMethod !== undefined) {
+    if (amount !== undefined) expense.amount = amount;
+    if (category !== undefined) expense.category = category;
+    if (description !== undefined) expense.description = description;
+    if (date !== undefined) expense.date = date;
+    if (paymentMethod !== undefined)
       expense.paymentMethod = paymentMethod;
-    }
 
     const updatedExpense = await expense.save();
 
@@ -146,23 +141,23 @@ const updateExpense = async (req, res) => {
     });
   }
 };
-// Delete an expense
+
+// ===============================
+// Delete Expense
+// ===============================
 const deleteExpense = async (req, res) => {
   try {
-    // Find expense belonging to logged-in user
     const expense = await Expense.findOne({
       _id: req.params.id,
       user: req.userId,
     });
 
-    // Check if expense exists
     if (!expense) {
       return res.status(404).json({
         message: "Expense not found",
       });
     }
 
-    // Delete the expense
     await expense.deleteOne();
 
     res.status(200).json({
@@ -177,7 +172,9 @@ const deleteExpense = async (req, res) => {
   }
 };
 
-// Export all controller functions
+// ===============================
+// Export Controllers
+// ===============================
 module.exports = {
   createExpense,
   getExpenses,
