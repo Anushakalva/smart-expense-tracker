@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
@@ -6,14 +7,13 @@ import Sidebar from "../components/Sidebar";
 import SummaryCard from "../components/SummaryCard";
 import AddExpenseForm from "../components/AddExpenseForm";
 import ExpenseList from "../components/ExpenseList";
-import ExpenseChart from "../components/ExpenseChart";
 import MonthlyExpenseChart from "../components/MonthlyExpenseChart";
+import CategoryChart from "../components/CategoryChart";
 import BudgetCard from "../components/BudgetCard";
-
 function Dashboard() {
   const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch expenses
   const fetchExpenses = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -27,10 +27,11 @@ function Dashboard() {
       setExpenses(response.data.expenses);
     } catch (error) {
       console.error("Error fetching expenses:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Load expenses when dashboard opens
   useEffect(() => {
     let ignore = false;
 
@@ -46,9 +47,14 @@ function Dashboard() {
 
         if (!ignore) {
           setExpenses(response.data.expenses);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error fetching expenses:", error);
+
+        if (!ignore) {
+          setLoading(false);
+        }
       }
     };
 
@@ -61,7 +67,8 @@ function Dashboard() {
 
   // Total Expenses
   const totalExpenses = expenses.reduce(
-    (total, expense) => total + Number(expense.amount),
+    (total, expense) =>
+      total + Number(expense.amount),
     0
   );
 
@@ -70,7 +77,9 @@ function Dashboard() {
 
   // Categories
   const categories = [
-    ...new Set(expenses.map((expense) => expense.category)),
+    ...new Set(
+      expenses.map((expense) => expense.category)
+    ),
   ].length;
 
   // This Month
@@ -86,21 +95,52 @@ function Dashboard() {
       );
     })
     .reduce(
-      (total, expense) => total + Number(expense.amount),
+      (total, expense) =>
+        total + Number(expense.amount),
       0
     );
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white">
+        <Navbar />
+
+        <div className="flex">
+          <Sidebar />
+
+          <main className="flex-1 flex items-center justify-center min-h-[calc(100vh-4rem)]">
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
+
+              <p className="text-gray-400 mt-4">
+                Loading your dashboard...
+              </p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-950 text-white">
       <Navbar />
 
       <div className="flex">
         <Sidebar />
 
-        <main className="flex-1 p-8">
-          <h2 className="text-3xl font-bold mb-8">
-            Dashboard
-          </h2>
+        <main className="flex-1 p-4 md:p-8 bg-gray-950">
+          {/* Header */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-white">
+              Dashboard
+            </h2>
+
+            <p className="text-gray-400 mt-2">
+              Track your spending and manage your
+              finances.
+            </p>
+          </div>
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -125,7 +165,7 @@ function Dashboard() {
             />
           </div>
 
-          {/* Monthly Budget */}
+          {/* Budget */}
           <BudgetCard monthlyExpense={thisMonth} />
 
           {/* Add Expense */}
@@ -133,13 +173,16 @@ function Dashboard() {
             fetchExpenses={fetchExpenses}
           />
 
-          {/* Category Chart */}
-          <ExpenseChart expenses={expenses} />
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <MonthlyExpenseChart
+              expenses={expenses}
+            />
 
-          {/* Monthly Chart */}
-          <MonthlyExpenseChart
-            expenses={expenses}
-          />
+            <CategoryChart
+              expenses={expenses}
+            />
+          </div>
 
           {/* Expense List */}
           <ExpenseList

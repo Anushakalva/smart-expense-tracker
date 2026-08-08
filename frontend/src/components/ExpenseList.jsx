@@ -3,13 +3,18 @@ import API from "../services/api";
 import EditExpenseModal from "./EditExpenseModal";
 
 function ExpenseList({ expenses, fetchExpenses }) {
-  const [selectedExpense, setSelectedExpense] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [selectedExpense, setSelectedExpense] =
+    useState(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [showModal, setShowModal] =
+    useState(false);
 
-  // Delete Expense
+  const [searchTerm, setSearchTerm] =
+    useState("");
+
+  const [selectedCategory, setSelectedCategory] =
+    useState("All");
+
   const deleteExpense = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -22,10 +27,10 @@ function ExpenseList({ expenses, fetchExpenses }) {
 
       alert("Expense deleted successfully!");
 
-      // Refresh Dashboard
       fetchExpenses();
     } catch (error) {
       console.error(error);
+
       alert(
         error.response?.data?.message ||
           "Failed to delete expense"
@@ -33,161 +38,241 @@ function ExpenseList({ expenses, fetchExpenses }) {
     }
   };
 
-  // Get unique categories
   const categories = [
-    ...new Set(expenses.map((expense) => expense.category)),
+    ...new Set(
+      expenses.map(
+        (expense) => expense.category
+      )
+    ),
   ];
 
-  // Filter expenses
-  const filteredExpenses = expenses.filter((expense) => {
-    const search = searchTerm.toLowerCase();
+  const filteredExpenses = expenses.filter(
+    (expense) => {
+      const search =
+        searchTerm.toLowerCase();
 
-    const matchesSearch =
-      expense.category?.toLowerCase().includes(search) ||
-      expense.description?.toLowerCase().includes(search);
+      const matchesSearch =
+        expense.category
+          ?.toLowerCase()
+          .includes(search) ||
+        expense.description
+          ?.toLowerCase()
+          .includes(search);
 
-    const matchesCategory =
-      selectedCategory === "All" ||
-      expense.category === selectedCategory;
+      const matchesCategory =
+        selectedCategory === "All" ||
+        expense.category ===
+          selectedCategory;
 
-    return matchesSearch && matchesCategory;
-  });
+      return (
+        matchesSearch &&
+        matchesCategory
+      );
+    }
+  );
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 mt-8">
-      <h2 className="text-2xl font-bold mb-6">
-        Recent Expenses
-      </h2>
+    <div className="bg-gray-900 rounded-2xl border border-gray-800 shadow-sm p-6 mt-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-white">
+            Recent Expenses
+          </h2>
 
-      {/* Search and Filter */}
+          <p className="text-sm text-gray-400 mt-1">
+            View and manage your transactions.
+          </p>
+        </div>
+
+        <div className="text-sm text-gray-400">
+          {filteredExpenses.length} transaction
+          {filteredExpenses.length !== 1
+            ? "s"
+            : ""}
+        </div>
+      </div>
+
+      {/* Search */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {/* Search */}
         <input
           type="text"
           placeholder="Search by category or description..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(e) =>
+            setSearchTerm(e.target.value)
+          }
+          className="bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
-        {/* Category Filter */}
         <select
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(e) =>
+            setSelectedCategory(
+              e.target.value
+            )
+          }
+          className="bg-gray-800 border border-gray-700 text-white rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="All">All Categories</option>
+          <option value="All">
+            All Categories
+          </option>
 
           {categories.map((category) => (
-            <option key={category} value={category}>
+            <option
+              key={category}
+              value={category}
+            >
               {category}
             </option>
           ))}
         </select>
       </div>
 
-      {/* Expense Table */}
+      {/* Empty state */}
       {expenses.length === 0 ? (
-        <p className="text-gray-500">
-          No expenses found.
-        </p>
+        <div className="text-center py-12">
+          <div className="text-5xl mb-4">
+            💸
+          </div>
+
+          <h3 className="text-lg font-semibold text-white">
+            No expenses yet
+          </h3>
+
+          <p className="text-gray-400 mt-1">
+            Add your first expense to start
+            tracking your spending.
+          </p>
+        </div>
       ) : filteredExpenses.length === 0 ? (
-        <p className="text-gray-500">
-          No expenses match your search or filter.
-        </p>
+        <div className="text-center py-12">
+          <div className="text-4xl mb-4">
+            🔍
+          </div>
+
+          <h3 className="text-lg font-semibold text-white">
+            No matching expenses
+          </h3>
+
+          <p className="text-gray-400 mt-1">
+            Try changing your search or category
+            filter.
+          </p>
+
+          <button
+            onClick={() => {
+              setSearchTerm("");
+              setSelectedCategory("All");
+            }}
+            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
+          >
+            Clear Filters
+          </button>
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="p-3 text-left">
+              <tr className="bg-gray-800">
+                <th className="p-3 text-left text-sm font-semibold text-gray-300">
                   Amount
                 </th>
 
-                <th className="p-3 text-left">
+                <th className="p-3 text-left text-sm font-semibold text-gray-300">
                   Category
                 </th>
 
-                <th className="p-3 text-left">
+                <th className="p-3 text-left text-sm font-semibold text-gray-300">
                   Description
                 </th>
 
-                <th className="p-3 text-left">
+                <th className="p-3 text-left text-sm font-semibold text-gray-300">
                   Date
                 </th>
 
-                <th className="p-3 text-left">
+                <th className="p-3 text-left text-sm font-semibold text-gray-300">
                   Payment
                 </th>
 
-                <th className="p-3 text-center">
+                <th className="p-3 text-center text-sm font-semibold text-gray-300">
                   Actions
                 </th>
               </tr>
             </thead>
 
             <tbody>
-              {filteredExpenses.map((expense) => (
-                <tr
-                  key={expense._id}
-                  className="border-t hover:bg-gray-50"
-                >
-                  <td className="p-3 font-medium">
-                    ₹{expense.amount}
-                  </td>
+              {filteredExpenses.map(
+                (expense) => (
+                  <tr
+                    key={expense._id}
+                    className="border-t border-gray-800 hover:bg-gray-800 transition"
+                  >
+                    <td className="p-3 font-semibold text-white">
+                      ₹{expense.amount}
+                    </td>
 
-                  <td className="p-3">
-                    {expense.category}
-                  </td>
+                    <td className="p-3">
+                      <span className="px-3 py-1 rounded-full bg-blue-900/40 text-blue-400 text-sm">
+                        {expense.category}
+                      </span>
+                    </td>
 
-                  <td className="p-3">
-                    {expense.description || "-"}
-                  </td>
+                    <td className="p-3 text-gray-300">
+                      {expense.description ||
+                        "-"}
+                    </td>
 
-                  <td className="p-3">
-                    {expense.date
-                      ? new Date(
-                          expense.date
-                        ).toLocaleDateString()
-                      : "-"}
-                  </td>
+                    <td className="p-3 text-gray-300">
+                      {expense.date
+                        ? new Date(
+                            expense.date
+                          ).toLocaleDateString()
+                        : "-"}
+                    </td>
 
-                  <td className="p-3">
-                    {expense.paymentMethod}
-                  </td>
+                    <td className="p-3 text-gray-300">
+                      {expense.paymentMethod}
+                    </td>
 
-                  <td className="p-3 text-center">
-                    <button
-                      onClick={() => {
-                        setSelectedExpense(expense);
-                        setShowModal(true);
-                      }}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg mr-2 transition"
-                    >
-                      Edit
-                    </button>
+                    <td className="p-3 text-center whitespace-nowrap">
+                      <button
+                        onClick={() => {
+                          setSelectedExpense(
+                            expense
+                          );
+                          setShowModal(true);
+                        }}
+                        className="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-2 rounded-lg mr-2 transition"
+                      >
+                        Edit
+                      </button>
 
-                    <button
-                      onClick={() =>
-                        deleteExpense(expense._id)
-                      }
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                      <button
+                        onClick={() =>
+                          deleteExpense(
+                            expense._id
+                          )
+                        }
+                        className="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-lg transition"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                )
+              )}
             </tbody>
           </table>
         </div>
       )}
 
-      {/* Edit Modal */}
       {showModal && (
         <EditExpenseModal
           expense={selectedExpense}
-          onClose={() => setShowModal(false)}
+          onClose={() =>
+            setShowModal(false)
+          }
           onUpdate={fetchExpenses}
         />
       )}

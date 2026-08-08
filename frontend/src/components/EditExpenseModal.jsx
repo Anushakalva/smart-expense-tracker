@@ -1,161 +1,203 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import API from "../services/api";
-import EditExpenseModal from "./EditExpenseModal";
 
-function ExpenseList() {
-  const [expenses, setExpenses] = useState([]);
-  const [selectedExpense, setSelectedExpense] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+function EditExpenseModal({ expense, onClose, onUpdate }) {
+  const [formData, setFormData] = useState({
+    amount: expense?.amount || "",
+    category: expense?.category || "",
+    description: expense?.description || "",
+    date: expense?.date
+      ? new Date(expense.date).toISOString().split("T")[0]
+      : "",
+    paymentMethod: expense?.paymentMethod || "UPI",
+  });
 
-  // Fetch Expenses
-  const fetchExpenses = async () => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     try {
       const token = localStorage.getItem("token");
 
-      const response = await API.get("/expenses", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setExpenses(response.data.expenses);
-    } catch (error) {
-      console.error("Error fetching expenses:", error);
-    }
-  };
-
-  // Delete Expense
-  const deleteExpense = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-
-      await API.delete(`/expenses/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      alert("Expense deleted successfully!");
-
-      fetchExpenses();
-    } catch (error) {
-      console.error("Delete expense error:", error);
-      alert(error.response?.data?.message || "Failed to delete expense");
-    }
-  };
-
-  useEffect(() => {
-    let ignore = false;
-
-    const loadExpenses = async () => {
-      try {
-        const token = localStorage.getItem("token");
-
-        const response = await API.get("/expenses", {
+      await API.put(
+        `/expenses/${expense._id}`,
+        formData,
+        {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
-
-        if (!ignore) {
-          setExpenses(response.data.expenses);
         }
-      } catch (error) {
-        console.error("Error fetching expenses:", error);
-      }
-    };
+      );
 
-    loadExpenses();
+      alert("Expense updated successfully!");
 
-    return () => {
-      ignore = true;
-    };
-  }, []);
+      onUpdate();
+      onClose();
+    } catch (error) {
+      console.error("Update expense error:", error);
+
+      alert(
+        error.response?.data?.message ||
+          "Failed to update expense"
+      );
+    }
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 mt-8">
-      <h2 className="text-2xl font-bold mb-6">
-        Recent Expenses
-      </h2>
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl w-full max-w-lg p-6">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-white">
+              Edit Expense
+            </h2>
 
-      {expenses.length === 0 ? (
-        <p className="text-gray-500">
-          No expenses found.
-        </p>
-      ) : (
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-3 text-left">Amount</th>
-              <th className="p-3 text-left">Category</th>
-              <th className="p-3 text-left">Description</th>
-              <th className="p-3 text-left">Date</th>
-              <th className="p-3 text-left">Payment</th>
-              <th className="p-3 text-center">Actions</th>
-            </tr>
-          </thead>
+            <p className="text-sm text-gray-400 mt-1">
+              Update your expense details
+            </p>
+          </div>
 
-          <tbody>
-            {expenses.map((expense) => (
-              <tr
-                key={expense._id}
-                className="border-t hover:bg-gray-50"
-              >
-                <td className="p-3 font-medium">
-                  ₹{expense.amount}
-                </td>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-2xl transition"
+          >
+            ×
+          </button>
+        </div>
 
-                <td className="p-3">
-                  {expense.category}
-                </td>
+        {/* Form */}
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
+          {/* Amount */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Amount
+            </label>
 
-                <td className="p-3">
-                  {expense.description || "-"}
-                </td>
+            <input
+              type="number"
+              name="amount"
+              value={formData.amount}
+              onChange={handleChange}
+              required
+              min="0"
+              className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-                <td className="p-3">
-                  {expense.date
-                    ? new Date(expense.date).toLocaleDateString()
-                    : "-"}
-                </td>
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Category
+            </label>
 
-                <td className="p-3">
-                  {expense.paymentMethod}
-                </td>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              required
+              className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">
+                Select Category
+              </option>
 
-                <td className="p-3 text-center">
-                  <button
-                    onClick={() => {
-                      setSelectedExpense(expense);
-                      setShowModal(true);
-                    }}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg mr-2 transition"
-                  >
-                    Edit
-                  </button>
+              <option>Food</option>
+              <option>Travel</option>
+              <option>Shopping</option>
+              <option>Bills</option>
+              <option>Entertainment</option>
+              <option>Health</option>
+              <option>Education</option>
+              <option>Other</option>
+            </select>
+          </div>
 
-                  <button
-                    onClick={() => deleteExpense(expense._id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg transition"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Description
+            </label>
 
-      {showModal && (
-        <EditExpenseModal
-          expense={selectedExpense}
-          onClose={() => setShowModal(false)}
-          onUpdate={fetchExpenses}
-        />
-      )}
+            <input
+              type="text"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Enter description"
+              className="w-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Date */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Date
+            </label>
+
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              required
+              className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Payment Method */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Payment Method
+            </label>
+
+            <select
+              name="paymentMethod"
+              value={formData.paymentMethod}
+              onChange={handleChange}
+              className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option>UPI</option>
+              <option>Cash</option>
+              <option>Credit Card</option>
+              <option>Debit Card</option>
+              <option>Net Banking</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white transition"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
 
-export default ExpenseList;
+export default EditExpenseModal;

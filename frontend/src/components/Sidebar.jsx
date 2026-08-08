@@ -1,25 +1,57 @@
+import { NavLink } from "react-router-dom";
+
 function Sidebar() {
+  const navItems = [
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+      icon: "📊",
+    },
+  ];
+
   return (
-    <aside className="w-64 bg-white shadow-lg min-h-screen p-6">
-      <h2 className="text-xl font-bold mb-6">Menu</h2>
+    <aside className="hidden md:flex w-64 min-h-[calc(100vh-73px)] bg-gray-900 border-r border-gray-800 flex-col justify-between">
+      <div className="p-4">
+        {/* Menu title */}
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-4">
+          Menu
+        </p>
 
-      <ul className="space-y-4">
-        <li className="cursor-pointer hover:text-blue-600 font-medium">
-          Dashboard
-        </li>
+        {/* Navigation */}
+        <nav className="space-y-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition ${
+                  isActive
+                    ? "bg-blue-900/40 text-blue-400 border border-blue-900/50"
+                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                }`
+              }
+            >
+              <span className="text-lg">
+                {item.icon}
+              </span>
 
-        <li className="cursor-pointer hover:text-blue-600 font-medium">
-          Expenses
-        </li>
+              <span>{item.name}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
 
-        <li className="cursor-pointer hover:text-blue-600 font-medium">
-          Budget
-        </li>
+      {/* Bottom information */}
+      <div className="mx-4 mb-6 p-4 bg-blue-900/20 border border-blue-900/40 rounded-xl">
+        <p className="text-sm font-semibold text-blue-400">
+          Smart Spending
+        </p>
 
-        <li className="cursor-pointer hover:text-blue-600 font-medium">
-          Settings
-        </li>
-      </ul>
+        <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+          Track your expenses and stay within your
+          monthly budget.
+        </p>
+      </div>
     </aside>
   );
 }
