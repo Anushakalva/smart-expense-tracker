@@ -1,23 +1,18 @@
 import { useState } from "react";
 
-function BudgetCard({ monthlyExpense }) {
+function BudgetCard({ monthlyExpense = 0 }) {
   const [budget, setBudget] = useState(() => {
     const savedBudget =
       localStorage.getItem("monthlyBudget");
 
-    return savedBudget
-      ? Number(savedBudget)
-      : 0;
+    return savedBudget ? Number(savedBudget) : 0;
   });
 
-  const [inputBudget, setInputBudget] =
-    useState(() => {
-      return (
-        localStorage.getItem(
-          "monthlyBudget"
-        ) || ""
-      );
-    });
+  const [inputBudget, setInputBudget] = useState(() => {
+    return (
+      localStorage.getItem("monthlyBudget") || ""
+    );
+  });
 
   const handleSaveBudget = (e) => {
     e.preventDefault();
@@ -36,27 +31,30 @@ function BudgetCard({ monthlyExpense }) {
 
     setBudget(newBudget);
 
-    alert(
-      "Monthly budget updated successfully!"
-    );
+    alert("Monthly budget updated successfully!");
   };
 
-  const remaining =
-    budget - monthlyExpense;
+  // Make sure expense is treated as a number
+  const spent = Number(monthlyExpense) || 0;
 
+  // Calculate remaining amount
+  const remaining = budget - spent;
+
+  // Calculate percentage used
   const percentage =
-    budget > 0
-      ? (monthlyExpense / budget) * 100
-      : 0;
+    budget > 0 ? (spent / budget) * 100 : 0;
 
-  const progress = Math.min(
-    percentage,
-    100
-  );
+  // Progress bar should never exceed 100%
+  const progress = Math.min(percentage, 100);
+
+  // Format currency
+  const formatAmount = (amount) =>
+    Number(amount).toLocaleString("en-IN");
 
   return (
-    <div className="bg-gray-900 rounded-2xl border border-gray-800 shadow-sm p-6 mt-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg p-6 mt-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold text-white">
             Monthly Budget
@@ -68,33 +66,35 @@ function BudgetCard({ monthlyExpense }) {
         </div>
 
         <div className="w-11 h-11 rounded-xl bg-blue-900/40 flex items-center justify-center">
-          <span className="text-xl">
-            💰
-          </span>
+          <span className="text-xl">💰</span>
         </div>
       </div>
 
+      {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {/* Budget */}
         <div className="rounded-xl bg-gray-800 p-4">
           <p className="text-sm text-gray-400">
             Monthly Budget
           </p>
 
           <p className="text-xl font-bold text-blue-400 mt-1">
-            ₹{budget || 0}
+            ₹{formatAmount(budget)}
           </p>
         </div>
 
+        {/* Spent */}
         <div className="rounded-xl bg-gray-800 p-4">
           <p className="text-sm text-gray-400">
             Spent
           </p>
 
           <p className="text-xl font-bold text-red-400 mt-1">
-            ₹{monthlyExpense}
+            ₹{formatAmount(spent)}
           </p>
         </div>
 
+        {/* Remaining */}
         <div className="rounded-xl bg-gray-800 p-4">
           <p className="text-sm text-gray-400">
             Remaining
@@ -107,12 +107,13 @@ function BudgetCard({ monthlyExpense }) {
                 : "text-red-400"
             }`}
           >
-            ₹{remaining}
+            ₹{formatAmount(remaining)}
           </p>
         </div>
       </div>
 
-      {budget > 0 && (
+      {/* Budget Progress */}
+      {budget > 0 ? (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-400">
@@ -124,6 +125,7 @@ function BudgetCard({ monthlyExpense }) {
             </span>
           </div>
 
+          {/* Progress Bar */}
           <div className="w-full h-3 bg-gray-800 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
@@ -139,23 +141,35 @@ function BudgetCard({ monthlyExpense }) {
             />
           </div>
 
+          {/* Status Message */}
           {percentage >= 100 && (
             <p className="text-sm text-red-400 font-medium mt-3">
-              ⚠️ You have exceeded your
-              monthly budget.
+              ⚠️ You have exceeded your monthly budget.
             </p>
           )}
 
-          {percentage >= 80 &&
-            percentage < 100 && (
-              <p className="text-sm text-yellow-400 font-medium mt-3">
-                ⚠️ You are approaching your
-                monthly budget.
-              </p>
-            )}
+          {percentage >= 80 && percentage < 100 && (
+            <p className="text-sm text-yellow-400 font-medium mt-3">
+              ⚠️ You are approaching your monthly budget.
+            </p>
+          )}
+
+          {percentage < 80 && (
+            <p className="text-sm text-green-400 font-medium mt-3">
+              ✓ You are within your monthly budget.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
+          <p className="text-sm text-gray-400">
+            Set a monthly budget to start tracking
+            your spending.
+          </p>
         </div>
       )}
 
+      {/* Set Budget */}
       <form
         onSubmit={handleSaveBudget}
         className="flex flex-col sm:flex-row gap-3"
@@ -175,7 +189,7 @@ function BudgetCard({ monthlyExpense }) {
           type="submit"
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition"
         >
-          Set Budget
+          {budget > 0 ? "Update Budget" : "Set Budget"}
         </button>
       </form>
     </div>

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
@@ -10,10 +9,13 @@ import ExpenseList from "../components/ExpenseList";
 import MonthlyExpenseChart from "../components/MonthlyExpenseChart";
 import CategoryChart from "../components/CategoryChart";
 import BudgetCard from "../components/BudgetCard";
+import SpendingInsights from "../components/SpendingInsights";
 function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [sidebarOpen, setSidebarOpen] =
+  useState(false);
+  // Fetch all expenses
   const fetchExpenses = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -32,6 +34,7 @@ function Dashboard() {
     }
   };
 
+  // Initial dashboard load
   useEffect(() => {
     let ignore = false;
 
@@ -82,7 +85,7 @@ function Dashboard() {
     ),
   ].length;
 
-  // This Month
+  // Current Month
   const now = new Date();
 
   const thisMonth = expenses
@@ -100,30 +103,38 @@ function Dashboard() {
       0
     );
 
+  // Loading screen
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white">
-        <Navbar />
+  <div className="min-h-screen bg-gray-950">
 
-        <div className="flex">
-          <Sidebar />
+    <Navbar
+      onMenuClick={() =>
+        setSidebarOpen(true)
+      }
+    />
 
-          <main className="flex-1 flex items-center justify-center min-h-[calc(100vh-4rem)]">
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
+    <div className="flex">
 
-              <p className="text-gray-400 mt-4">
-                Loading your dashboard...
-              </p>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() =>
+          setSidebarOpen(false)
+        }
+      />
+
+      <main className="flex-1 p-4 md:p-8 bg-gray-950">
+        {/* Your existing dashboard content */}
+      </main>
+
+    </div>
+
+  </div>
+);
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-gray-950">
       <Navbar />
 
       <div className="flex">
@@ -146,12 +157,16 @@ function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <SummaryCard
               title="Total Expenses"
-              value={`₹${totalExpenses}`}
+              value={`₹${totalExpenses.toLocaleString(
+                "en-IN"
+              )}`}
             />
 
             <SummaryCard
               title="This Month"
-              value={`₹${thisMonth}`}
+              value={`₹${thisMonth.toLocaleString(
+                "en-IN"
+              )}`}
             />
 
             <SummaryCard
@@ -166,7 +181,9 @@ function Dashboard() {
           </div>
 
           {/* Budget */}
-          <BudgetCard monthlyExpense={thisMonth} />
+          <BudgetCard
+            monthlyExpense={thisMonth}
+          />
 
           {/* Add Expense */}
           <AddExpenseForm
@@ -174,21 +191,26 @@ function Dashboard() {
           />
 
           {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <MonthlyExpenseChart
-              expenses={expenses}
-            />
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+  <MonthlyExpenseChart
+    expenses={expenses}
+  />
 
-            <CategoryChart
-              expenses={expenses}
-            />
-          </div>
+  <CategoryChart
+    expenses={expenses}
+  />
+</div>
 
-          {/* Expense List */}
-          <ExpenseList
-            expenses={expenses}
-            fetchExpenses={fetchExpenses}
-          />
+{/* Spending Insights */}
+<SpendingInsights
+  expenses={expenses}
+/>
+
+{/* Expense List */}
+<ExpenseList
+  expenses={expenses}
+  fetchExpenses={fetchExpenses}
+/>
         </main>
       </div>
     </div>

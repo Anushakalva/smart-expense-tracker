@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Navbar() {
+function Navbar({ onMenuClick }) {
   const navigate = useNavigate();
+
+  const [showUserMenu, setShowUserMenu] =
+    useState(false);
 
   const user = JSON.parse(
     localStorage.getItem("user")
@@ -15,13 +19,30 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-gray-900 border-b border-gray-800">
+    <nav className="sticky top-0 z-40 bg-gray-950/95 backdrop-blur-md border-b border-gray-800">
+
       <div className="px-4 md:px-8 py-4">
+
         <div className="flex items-center justify-between">
-          {/* Logo */}
+
+          {/* Left Section */}
           <div className="flex items-center">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm">
-              <span className="text-white font-bold text-lg">
+
+            {/* Mobile Menu Button */}
+            <button
+              type="button"
+              onClick={onMenuClick}
+              className="md:hidden mr-3 w-10 h-10 flex items-center justify-center rounded-lg bg-gray-900 border border-gray-800 text-gray-300 hover:text-white hover:bg-gray-800 transition"
+              aria-label="Open menu"
+            >
+              <span className="text-xl">
+                ☰
+              </span>
+            </button>
+
+            {/* Logo */}
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/20">
+              <span className="text-white text-lg font-bold">
                 S
               </span>
             </div>
@@ -35,11 +56,13 @@ function Navbar() {
                 Smart Expense Management
               </p>
             </div>
+
           </div>
 
-          {/* User section */}
+          {/* User Section */}
           <div className="flex items-center gap-3">
-            {/* User details */}
+
+            {/* User Details */}
             <div className="hidden sm:block text-right">
               <p className="text-sm font-semibold text-white">
                 {user?.name || "User"}
@@ -51,7 +74,15 @@ function Navbar() {
             </div>
 
             {/* Avatar */}
-            <div className="w-10 h-10 rounded-full bg-blue-900/50 border border-blue-800 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() =>
+                setShowUserMenu(
+                  !showUserMenu
+                )
+              }
+              className="w-10 h-10 rounded-full bg-blue-900/50 border border-blue-800 flex items-center justify-center hover:bg-blue-900/70 transition"
+            >
               <span className="text-blue-400 font-semibold">
                 {user?.name
                   ? user.name
@@ -59,18 +90,47 @@ function Navbar() {
                       .toUpperCase()
                   : "U"}
               </span>
-            </div>
+            </button>
 
-            {/* Logout */}
+            {/* Desktop Logout */}
             <button
               onClick={handleLogout}
-              className="bg-gray-800 hover:bg-red-900/40 hover:text-red-400 text-gray-300 border border-gray-700 hover:border-red-800 px-3 py-2 rounded-lg text-sm font-medium transition"
+              className="hidden sm:flex items-center gap-2 bg-gray-900 hover:bg-red-900/30 text-gray-300 hover:text-red-400 border border-gray-800 hover:border-red-800 px-3 py-2 rounded-lg text-sm font-medium transition"
             >
+              <span>↪</span>
               Logout
             </button>
+
+            {/* Mobile User Menu */}
+            {showUserMenu && (
+              <div className="absolute right-4 top-16 sm:hidden w-56 bg-gray-900 border border-gray-800 rounded-xl shadow-2xl p-3">
+
+                <div className="px-3 py-2 border-b border-gray-800 mb-2">
+                  <p className="text-sm font-semibold text-white">
+                    {user?.name || "User"}
+                  </p>
+
+                  <p className="text-xs text-gray-400 mt-1 break-all">
+                    {user?.email || ""}
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-900/30 transition"
+                >
+                  ↪ Logout
+                </button>
+
+              </div>
+            )}
+
           </div>
+
         </div>
+
       </div>
+
     </nav>
   );
 }
