@@ -1,5 +1,6 @@
-const Expense = require("../models/Expense");
 
+const Expense = require("../models/Expense");
+const mongoose = require("mongoose");
 // ===============================
 // Create Expense
 // ===============================
@@ -13,19 +14,54 @@ const createExpense = async (req, res) => {
       paymentMethod,
     } = req.body;
 
-    if (!amount || !category) {
+    // Validate required fields
+    if (amount === undefined || amount === null || amount === "") {
       return res.status(400).json({
-        message: "Amount and category are required",
+        message: "Amount is required",
+      });
+    }
+
+    if (!category || !category.trim()) {
+      return res.status(400).json({
+        message: "Category is required",
+      });
+    }
+
+    // Validate amount
+    const numericAmount = Number(amount);
+
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({
+        message: "Amount must be a positive number",
+      });
+    }
+
+    // Validate payment method
+    const allowedPaymentMethods = [
+      "UPI",
+      "Cash",
+      "Credit Card",
+      "Debit Card",
+      "Net Banking",
+      "Other",
+    ];
+
+    if (
+      paymentMethod &&
+      !allowedPaymentMethods.includes(paymentMethod)
+    ) {
+      return res.status(400).json({
+        message: "Invalid payment method",
       });
     }
 
     const expense = await Expense.create({
       user: req.userId,
-      amount,
-      category,
-      description,
-      date,
-      paymentMethod,
+      amount: numericAmount,
+      category: category.trim(),
+      description: description?.trim() || "",
+      date: date || Date.now(),
+      paymentMethod: paymentMethod || "UPI",
     });
 
     res.status(201).json({
@@ -40,7 +76,6 @@ const createExpense = async (req, res) => {
     });
   }
 };
-
 // ===============================
 // Get All Expenses
 // ===============================
@@ -68,11 +103,18 @@ const getExpenses = async (req, res) => {
   }
 };
 
+
 // ===============================
 // Get Single Expense
 // ===============================
 const getExpenseById = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        message: "Invalid expense ID",
+      });
+    }
+
     const expense = await Expense.findOne({
       _id: req.params.id,
       user: req.userId,
@@ -95,12 +137,14 @@ const getExpenseById = async (req, res) => {
     });
   }
 };
-
-// ===============================
 // Update Expense
-// ===============================
 const updateExpense = async (req, res) => {
   try {
+     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+  return res.status(400).json({
+    message: "Invalid expense ID",
+  });
+}
     const {
       amount,
       category,
@@ -109,6 +153,7 @@ const updateExpense = async (req, res) => {
       paymentMethod,
     } = req.body;
 
+    // Find expense belonging to logged-in user
     const expense = await Expense.findOne({
       _id: req.params.id,
       user: req.userId,
@@ -120,33 +165,103 @@ const updateExpense = async (req, res) => {
       });
     }
 
-    if (amount !== undefined) expense.amount = amount;
-    if (category !== undefined) expense.category = category;
-    if (description !== undefined) expense.description = description;
-    if (date !== undefined) expense.date = date;
-    if (paymentMethod !== undefined)
-      expense.paymentMethod = paymentMethod;
+    // Validate amount if provided
+    if (amount !== undefined) {
+      const numericAmount = Number(amount);
 
-    const updatedExpense = await expense.save();
+      if (
+        isNaN(numericAmount) ||
+        numericAmount <= 0
+      ) {
+        return res.status(400).json({
+          message: "Amount must be a positive number",
+        });
+      }
+
+      expense.amount = numericAmount;
+    }
+
+    // Validate category if provided
+    if (category !== undefined) {
+      if (!category.trim()) {
+        return res.status(400).json({
+          message: "Category cannot be empty",
+        });
+      }
+
+      expense.category = category.trim();
+    }
+
+    // Update description
+    if (description !== undefined) {
+      expense.description =
+        description.trim();
+    }
+
+    // Update date
+    if (date !== undefined) {
+      expense.date = date;
+    }
+
+    // Validate payment method
+    if (paymentMethod !== undefined) {
+      const allowedPaymentMethods = [
+        "UPI",
+        "Cash",
+        "Credit Card",
+        "Debit Card",
+        "Net Banking",
+        "Other",
+      ];
+
+      if (
+        !allowedPaymentMethods.includes(
+          paymentMethod
+        )
+      ) {
+        return res.status(400).json({
+          message: "Invalid payment method",
+        });
+      }
+
+      expense.paymentMethod =
+        paymentMethod;
+    }
+
+    const updatedExpense =
+      await expense.save();
 
     res.status(200).json({
       message: "Expense updated successfully",
       expense: updatedExpense,
     });
   } catch (error) {
-    console.error("Update expense error:", error);
+    console.error(
+      "Update expense error:",
+      error
+    );
 
     res.status(500).json({
-      message: "Server error while updating expense",
+      message:
+        "Server error while updating expense",
     });
   }
 };
+
 
 // ===============================
 // Delete Expense
 // ===============================
 const deleteExpense = async (req, res) => {
   try {
+    // Validate MongoDB ID
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        message: "Invalid expense ID",
+      });
+    }
+
+    // Find expense belonging to logged-in user
     const expense = await Expense.findOne({
       _id: req.params.id,
       user: req.userId,
